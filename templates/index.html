@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CloudDeploy Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">CloudDeploy Dashboard</p>
+          <h1>{{ app_name }}</h1>
+        </div>
+        <div class="tagline">{{ subtitle }}</div>
+      </header>
+
+      <main class="dashboard">
+        <section class="status-panel">
+          <p class="section-label">Application Status</p>
+          <div class="status-row">
+            <span class="status-dot"></span>
+            <span>Running</span>
+          </div>
+        </section>
+
+        <section class="metrics-grid">
+          <article class="metric-card">
+            <div class="metric-label">Environment</div>
+            <div class="metric-value">{{ environment }}</div>
+          </article>
+          <article class="metric-card">
+            <div class="metric-label">Version</div>
+            <div class="metric-value">{{ version }}</div>
+          </article>
+          <article class="metric-card">
+            <div class="metric-label">Platform</div>
+            <div class="metric-value">{{ platform }}</div>
+          </article>
+          <article class="metric-card">
+            <div class="metric-label">Hosting</div>
+            <div class="metric-value">{{ hosting }}</div>
+          </article>
+        </section>
+
+        <section class="message-panel">
+          <p>{{ message }}</p>
+        </section>
+
+        <section class="feature-grid">
+          <article class="feature-card">
+            <h2>Deployment</h2>
+            <p>GitHub → Azure</p>
+          </article>
+          <article class="feature-card">
+            <h2>Configuration</h2>
+            <p>App Settings</p>
+          </article>
+          <article class="feature-card">
+            <h2>Monitoring</h2>
+            <p>Logs</p>
+          </article>
+        </section>
+
+        <section class="utility-links">
+          <a href="/health">/health</a>
+          <a href="/about">/about</a>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
