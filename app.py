@@ -43,7 +43,7 @@ def home():
     except ValueError as exc:
         logger.warning("Feedback data unavailable: %s", exc)
         feedback_items = []
-        feedback_error = "Database configuration is missing. Set SQL_CONNECTION_STRING to enable Cloud Feedback."
+        feedback_error = "Database configuration is missing. Set SQL_SERVER, SQL_USER, SQL_PASSWORD, and SQL_DATABASE to enable Cloud Feedback."
     except Exception as exc:
         logger.exception("Unable to fetch feedback data")
         feedback_items = []

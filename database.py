@@ -4,24 +4,28 @@ import os
 logger = logging.getLogger(__name__)
 
 
-def _get_pyodbc():
-    try:
-        import pyodbc
-    except ImportError as exc:
-        raise RuntimeError(
-            "pyodbc is not available. Install the SQL Server ODBC driver and dependency first."
-        ) from exc
-
-    return pyodbc
-
-
 def get_connection():
-    connection_string = os.getenv("SQL_CONNECTION_STRING")
-    if not connection_string:
-        raise ValueError("SQL_CONNECTION_STRING is not configured.")
+    server = os.getenv("SQL_SERVER")
+    user = os.getenv("SQL_USER")
+    password = os.getenv("SQL_PASSWORD")
+    database = os.getenv("SQL_DATABASE")
 
-    pyodbc = _get_pyodbc()
-    return pyodbc.connect(connection_string, timeout=30)
+    if not all([server, user, password, database]):
+        raise ValueError(
+            "Database configuration is missing. Set SQL_SERVER, SQL_USER, SQL_PASSWORD, and SQL_DATABASE to enable Cloud Feedback."
+        )
+
+    import pymssql
+
+    return pymssql.connect(
+        server=server,
+        user=user,
+        password=password,
+        database=database,
+        port=1433,
+        login_timeout=30,
+        timeout=30,
+    )
 
 
 def fetch_feedback(limit=10):
@@ -31,11 +35,11 @@ def fetch_feedback(limit=10):
     try:
         cursor.execute(
             """
-            SELECT TOP (?) Id, Name, Message, CreatedAt
+            SELECT TOP (%s) Id, Name, Message, CreatedAt
             FROM Feedback
             ORDER BY CreatedAt DESC
             """,
-            limit,
+            (limit,),
         )
         rows = cursor.fetchall()
         return [
@@ -73,9 +77,8 @@ def save_feedback(name, message):
 
     try:
         cursor.execute(
-            "INSERT INTO Feedback (Name, Message) VALUES (?, ?)",
-            cleaned_name,
-            cleaned_message,
+            "INSERT INTO Feedback (Name, Message) VALUES (%s, %s)",
+            (cleaned_name, cleaned_message),
         )
         connection.commit()
     finally:
