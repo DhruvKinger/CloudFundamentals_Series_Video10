@@ -63,6 +63,54 @@
           </article>
         </section>
 
+        <section class="feedback-section">
+          <div class="feedback-card">
+            <p class="section-label">Cloud Feedback</p>
+
+            {% if validation_error %}
+            <div class="alert alert-error">{{ validation_error }}</div>
+            {% endif %}
+
+            {% if feedback_error %}
+            <div class="alert alert-error">{{ feedback_error }}</div>
+            {% endif %}
+
+            <form method="post" action="/feedback" class="feedback-form">
+              <div class="field-group">
+                <label for="name">Name</label>
+                <input id="name" name="name" type="text" maxlength="100" value="{{ form_name }}" required>
+              </div>
+
+              <div class="field-group">
+                <label for="message">Message</label>
+                <textarea id="message" name="message" maxlength="500" rows="4" required>{{ form_message }}</textarea>
+              </div>
+
+              <button type="submit">Submit Feedback</button>
+            </form>
+          </div>
+
+          <div class="feedback-card">
+            <p class="section-label">Recent Feedback</p>
+
+            {% if feedback_items %}
+              <div class="feedback-list">
+                {% for item in feedback_items %}
+                <article class="feedback-item">
+                  <div class="feedback-head">
+                    <strong>{{ item.name }}</strong>
+                    <span>{{ item.created_at.strftime('%Y-%m-%d %H:%M UTC') if item.created_at else '' }}</span>
+                  </div>
+                  <p>"{{ item.message }}"</p>
+                </article>
+                {% endfor %}
+              </div>
+            {% else %}
+              <p class="empty-state">No feedback yet. Be the first to share your thoughts.</p>
+            {% endif %}
+          </div>
+        </section>
+
         <section class="utility-links">
           <a href="/health">/health</a>
           <a href="/about">/about</a>

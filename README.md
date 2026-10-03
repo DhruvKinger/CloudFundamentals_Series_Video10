@@ -92,9 +92,10 @@ The app reads configuration from environment variables:
 APP_ENVIRONMENT=Development
 APP_VERSION=1.0
 APP_MESSAGE=Application is running successfully.
+SQL_CONNECTION_STRING=Driver={ODBC Driver 18 for SQL Server};Server=tcp:<server-name>.database.windows.net,1433;Database=dhruvfeedbackdb;Uid=<username>;Pwd=<password>;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;
 ```
 
-If a variable is missing, the app uses a safe default value.
+If a variable is missing, the app uses a safe default value for the app-level settings. The SQL connection string must be configured for the feedback feature to work.
 
 ## Azure App Service deployment
 

@@ -2,9 +2,11 @@ import logging
 import os
 import sys
 
-from flask import Flask, jsonify, render_template, render_template_string
+from flask import Flask, jsonify, redirect, render_template, render_template_string, request, url_for
 
 from flask import __version__ as flask_version
+
+from database import fetch_feedback, save_feedback
 
 
 app = Flask(__name__)
@@ -35,6 +37,18 @@ def home():
         ),
     }
 
+    try:
+        feedback_items = fetch_feedback()
+        feedback_error = None
+    except ValueError as exc:
+        logger.warning("Feedback data unavailable: %s", exc)
+        feedback_items = []
+        feedback_error = "Database configuration is missing. Set SQL_CONNECTION_STRING to enable Cloud Feedback."
+    except Exception as exc:
+        logger.exception("Unable to fetch feedback data")
+        feedback_items = []
+        feedback_error = "We couldn't load feedback right now. Please try again later."
+
     return render_template(
         "index.html",
         app_name="CloudDeploy Dashboard",
@@ -44,7 +58,93 @@ def home():
         message=config["message"],
         platform="Python + Flask",
         hosting="Azure App Service",
+        feedback_items=feedback_items,
+        feedback_error=feedback_error,
+        validation_error=None,
+        form_name="",
+        form_message="",
     )
+
+
+@app.route("/feedback", methods=["POST"])
+def feedback():
+    name = (request.form.get("name") or "").strip()
+    message = (request.form.get("message") or "").strip()
+
+    try:
+        feedback_items = fetch_feedback()
+    except ValueError as exc:
+        logger.warning("Feedback data unavailable: %s", exc)
+        feedback_items = []
+    except Exception:
+        logger.exception("Unable to fetch feedback data")
+        feedback_items = []
+
+    validation_error = None
+    if not name:
+        validation_error = "Name is required."
+    elif len(name) > 100:
+        validation_error = "Name must be 100 characters or less."
+
+    if not message:
+        validation_error = "Message is required."
+    elif len(message) > 500:
+        validation_error = "Message must be 500 characters or less."
+
+    if validation_error:
+        return render_template(
+            "index.html",
+            app_name="CloudDeploy Dashboard",
+            subtitle="From Code to Cloud",
+            environment=get_setting("APP_ENVIRONMENT", "Development"),
+            version=get_setting("APP_VERSION", "1.0"),
+            message=get_setting("APP_MESSAGE", "Application is running successfully."),
+            platform="Python + Flask",
+            hosting="Azure App Service",
+            feedback_items=feedback_items,
+            feedback_error=None,
+            validation_error=validation_error,
+            form_name=name,
+            form_message=message,
+        )
+
+    try:
+        save_feedback(name, message)
+        return redirect(url_for("home"))
+    except ValueError as exc:
+        logger.warning("Feedback submission validation error: %s", exc)
+        return render_template(
+            "index.html",
+            app_name="CloudDeploy Dashboard",
+            subtitle="From Code to Cloud",
+            environment=get_setting("APP_ENVIRONMENT", "Development"),
+            version=get_setting("APP_VERSION", "1.0"),
+            message=get_setting("APP_MESSAGE", "Application is running successfully."),
+            platform="Python + Flask",
+            hosting="Azure App Service",
+            feedback_items=feedback_items,
+            feedback_error=str(exc),
+            validation_error=None,
+            form_name=name,
+            form_message=message,
+        )
+    except Exception:
+        logger.exception("Unable to save feedback data")
+        return render_template(
+            "index.html",
+            app_name="CloudDeploy Dashboard",
+            subtitle="From Code to Cloud",
+            environment=get_setting("APP_ENVIRONMENT", "Development"),
+            version=get_setting("APP_VERSION", "1.0"),
+            message=get_setting("APP_MESSAGE", "Application is running successfully."),
+            platform="Python + Flask",
+            hosting="Azure App Service",
+            feedback_items=feedback_items,
+            feedback_error="We couldn't submit your feedback right now. Please try again later.",
+            validation_error=None,
+            form_name=name,
+            form_message=message,
+        )
 
 
 @app.route("/health")
